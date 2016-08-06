@@ -16,13 +16,10 @@ config = {
 
 def loadDictionary(name, path)
   STDOUT.sync = false
-
-  print 'Loading '+name+' ... '
+  puts "Loading #{name} ..."
   dir_base = File.readlines(path).each.map(&:chomp)
-  puts "\rLoading "+name+" ... OK"
-
+  puts "Loading #{name} ... OK"
   STDOUT.sync = true
-
   return dir_base
 end
 
@@ -88,7 +85,7 @@ def checkDomain(target, found_domains = {}, ua = HTTPClient.new)
   end
 
   begin
-    resp = ua.head('http://'+target+'/')
+    resp = ua.head("http://#{target}/")
   rescue
     return false
   end
@@ -109,7 +106,7 @@ http_client.cookie_manager = nil
 targets = []
 sites.each do |site|
   sub_base.each do |sub|
-    targets.push( {:sub_domain => sub+'.'+site, :original => site} )
+    targets.push( {:sub_domain => sub + '.' + site, :original => site} )
   end
 end
 
@@ -145,7 +142,7 @@ config[:threads_subdomain_scanner].times do
   end
 end
 
-puts '[INFO] Start subdomain scanner ...'
+puts "[INFO] Start subdomain scanner ..."
 dir_scanner_threads.each {|thr| thr.join }
 
 if File.exist?('tmp1.txt')
@@ -172,7 +169,7 @@ config[:threads_dir_scanner].times do
     until tasks_file.eof?
       target = tasks_file.gets.chomp.split('|')
       next if target.empty?
-      url = 'http://'+target[1]+'/'+target[2]
+      url = "http://#{target[1]}/#{target[2]}"
 
       if found_path.include?(target[1]) and found_path[target[1]].include?(url)
         next
@@ -201,17 +198,17 @@ dir_scanner_threads.each {|thr| thr.join }
 File.delete('tmp1.txt')
 
 found_domains.each do |key, value|
-  puts '---------------------------------------------------------------------------------------------'
-  puts 'Target: '+key
-  puts 'Subdomains: '+value.size.to_s+' Files and directories: '+found_path[key].size.to_s
+  puts "---------------------------------------------------------------------------------------------"
+  puts "Target: #{key}"
+  puts "Subdomains: #{value.size.to_s} Files and directories: #{found_path[key].size.to_s}"
 
   if value.size > 0
-    puts '============================================'+"\n"+'Subdomains:'+"\n"+value.join("\n")
+    puts "============================================\nSubdomains:\n#{value.join("\n")}"
   end
 
   if found_path[key].size > 0
-    puts '============================================'+"\n"+'Files and directories:'+"\n"+found_path[key].join("\n")
+    puts "============================================\nFiles and directories:\n#{found_path[key].join("\n")}"
   end
 
-  puts '---------------------------------------------------------------------------------------------'+"\n\n"
+  puts "---------------------------------------------------------------------------------------------\n\n"
 end
