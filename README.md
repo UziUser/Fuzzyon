@@ -1,2 +1,2 @@
 # Fuzzyon
-Catch 
+Just simple fuzzer on ruby
