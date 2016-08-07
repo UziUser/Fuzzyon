@@ -76,7 +76,7 @@ config[:threads_resolver].times do
   end
 end
 
-puts '[INFO] Start AXFR resolver ...'
+puts "[INFO] Start AXFR resolver ..."
 axfr_resolver_threads.each {|thr| thr.join }
 
 def checkDomain(target, found_domains = {}, ua = HTTPClient.new)
@@ -135,7 +135,7 @@ config[:threads_subdomain_scanner].times do
       end
 
       sub_base.each do |sub|
-        targets.push( {:sub_domain => sub+'.'+target[:sub_domain], :original => target[:sub_domain]} )
+        targets.push( {:sub_domain => "#{sub}.#{target[:sub_domain]}", :original => target[:sub_domain]} )
       end
 
     end
@@ -153,7 +153,7 @@ tmp_file = File.open('tmp1.txt', 'a')
 found_domains.each do |key, value|
   value.each do |subdomain|
     dir_base.each do |dir|
-      tmp_file.puts key+'|'+subdomain+'|'+dir
+      tmp_file.puts "#{key}|#{subdomain}|#{dir}"
     end
   end
 end
@@ -193,7 +193,7 @@ config[:threads_dir_scanner].times do
   end
 end
 
-puts '[INFO] Start dir scanner ...'
+puts "[INFO] Start dir scanner ..."
 dir_scanner_threads.each {|thr| thr.join }
 File.delete('tmp1.txt')
 
