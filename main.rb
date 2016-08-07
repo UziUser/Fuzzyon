@@ -54,6 +54,24 @@ def resolverGetInfo(target, resolver = Net::DNS::Resolver.new)
   return result
 end
 
+def checkStatus(target, found_domains = {}, ua = HTTPClient.new)
+  if found_domains.include?(target)
+    return false
+  end
+
+  begin
+    resp = ua.head("http://#{target}")
+  rescue
+    return false
+  end
+
+  if resp.respond_to?('status')
+    return true, resp.status
+  end
+
+  return false
+end
+
 targets = sites.clone
 found_domains = {}
 
@@ -79,24 +97,6 @@ end
 puts "[INFO] Start AXFR resolver ..."
 axfr_resolver_threads.each {|thr| thr.join }
 
-def checkDomain(target, found_domains = {}, ua = HTTPClient.new)
-  if found_domains.include?(target)
-    return false
-  end
-
-  begin
-    resp = ua.head("http://#{target}/")
-  rescue
-    return false
-  end
-
-  if resp.respond_to?('status') and resp.status == 200
-    return true
-  end
-
-  return false
-end
-
 http_client = HTTPClient.new
 http_client.follow_redirect_count = 1
 http_client.receive_timeout = config[:timeout_http_client]
@@ -106,7 +106,7 @@ http_client.cookie_manager = nil
 targets = []
 sites.each do |site|
   sub_base.each do |sub|
-    targets.push( {:sub_domain => sub + '.' + site, :original => site} )
+    targets.push( {:sub_domain => "#{sub}.#{site}", :original => site} )
   end
 end
 
@@ -117,7 +117,7 @@ config[:threads_subdomain_scanner].times do
       target = targets.pop
 
       begin
-        result = checkDomain(target[:sub_domain], found_domains, http_client)
+        result, response_code = checkStatus(target[:sub_domain], found_domains, http_client)
       rescue
         next
       end
