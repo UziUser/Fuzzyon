@@ -4,9 +4,9 @@ require 'httpclient'
 require 'net/dns'
 
 config = {
-    :dir_base => 'dir_base.txt',
-    :subdomain_base => 'sub_base.txt',
-    :targets => 'sites.txt',
+    :dir_base => 'dictionaries/directories.txt',
+    :subdomain_base => 'dictionaries/subdomains.txt',
+    :targets => 'targets.txt',
 
     :timeout_http_client => 5,
     :threads_resolver => 1,
