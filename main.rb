@@ -54,7 +54,7 @@ def resolverGetInfo(target, resolver = Net::DNS::Resolver.new)
   return result
 end
 
-def checkStatus(target, found_domains = {}, ua = HTTPClient.new)
+def getStatus(target, found_domains = {}, ua = HTTPClient.new)
   if found_domains.include?(target)
     return false
   end
@@ -66,7 +66,7 @@ def checkStatus(target, found_domains = {}, ua = HTTPClient.new)
   end
 
   if resp.respond_to?('status')
-    return true, resp.status
+    return resp.status
   end
 
   return false
@@ -117,12 +117,12 @@ config[:threads_subdomain_scanner].times do
       target = targets.pop
 
       begin
-        result, response_code = checkStatus(target[:sub_domain], found_domains, http_client)
+        response_code = getStatus(target[:sub_domain], found_domains, http_client)
       rescue
         next
       end
 
-      unless result
+      unless response_code == 200
         next
       end
 
