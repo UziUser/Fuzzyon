@@ -154,7 +154,7 @@ EOS
     long '--version'
     desc 'Show version'
     action do
-      puts "Fazzeon CLI v#{VERSION}"
+      puts "Fuzzyon CLI v#{VERSION}"
       exit
     end
   end
