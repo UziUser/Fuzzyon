@@ -4,15 +4,17 @@ require 'httpclient'
 require 'net/dns'
 
 config = {
-    :dir_base => 'dir_base.txt',
-    :subdomain_base => 'sub_base.txt',
-    :targets => 'sites.txt',
+    :dir_base => 'dictionaries/directories.txt',
+    :subdomain_base => 'dictionaries/subdomains.txt',
+    :targets => 'targets.txt',
 
     :timeout_http_client => 5,
     :threads_resolver => 1,
     :threads_subdomain_scanner => 1,
     :threads_dir_scanner => 1,
 }
+
+$VERBOSE = nil
 
 def loadDictionary(name, path)
   STDOUT.sync = false
@@ -26,6 +28,12 @@ end
 dir_base = loadDictionary('dir base', config[:dir_base])
 sub_base = loadDictionary('subdomain base', config[:subdomain_base])
 sites = loadDictionary('targets base', config[:targets])
+
+http_client = HTTPClient.new
+http_client.follow_redirect_count = 1
+http_client.receive_timeout = config[:timeout_http_client]
+http_client.send_timeout = config[:timeout_http_client]
+http_client.cookie_manager = nil
 
 
 def resolverGetInfo(target, resolver = Net::DNS::Resolver.new)
@@ -54,6 +62,20 @@ def resolverGetInfo(target, resolver = Net::DNS::Resolver.new)
   return result
 end
 
+def getStatus(target, ua = HTTPClient.new)
+  begin
+    resp = ua.head("http://#{target}")
+  rescue
+    return false
+  end
+
+  if resp.respond_to?('status')
+    return resp.status
+  end
+
+  return false
+end
+
 targets = sites.clone
 found_domains = {}
 
@@ -79,34 +101,10 @@ end
 puts "[INFO] Start AXFR resolver ..."
 axfr_resolver_threads.each {|thr| thr.join }
 
-def checkDomain(target, found_domains = {}, ua = HTTPClient.new)
-  if found_domains.include?(target)
-    return false
-  end
-
-  begin
-    resp = ua.head("http://#{target}/")
-  rescue
-    return false
-  end
-
-  if resp.respond_to?('status') and resp.status == 200
-    return true
-  end
-
-  return false
-end
-
-http_client = HTTPClient.new
-http_client.follow_redirect_count = 1
-http_client.receive_timeout = config[:timeout_http_client]
-http_client.send_timeout = config[:timeout_http_client]
-http_client.cookie_manager = nil
-
 targets = []
 sites.each do |site|
   sub_base.each do |sub|
-    targets.push( {:sub_domain => sub + '.' + site, :original => site} )
+    targets.push( {:sub_domain => "#{sub}.#{site}", :original => site} )
   end
 end
 
@@ -115,14 +113,8 @@ config[:threads_subdomain_scanner].times do
   dir_scanner_threads << Thread.new do
     while targets.size > 0
       target = targets.pop
-
-      begin
-        result = checkDomain(target[:sub_domain], found_domains, http_client)
-      rescue
-        next
-      end
-
-      unless result
+      
+      if found_domains.include?(target) or getStatus(target[:sub_domain]) != 200
         next
       end
 
@@ -175,13 +167,8 @@ config[:threads_dir_scanner].times do
         next
       end
 
-      begin
-        resp = http_client.head(url)
-      rescue
-        next
-      end
-
-      next unless resp.respond_to?('status') and resp.status == 200
+      next unless getStatus("#{target[1]}/#{target[2]}") == 200
+      
       puts "[Dir Scanner] Target: #{target[0]} Found: #{url}"
 
       if found_path.include?(target[0])
