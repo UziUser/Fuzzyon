@@ -2,7 +2,7 @@ require 'httpclient'
 require 'fileutils'
 
 class GitDumper
-  def initialize(target_list, path = "git/", threads = 5)
+  def initialize(target_list, path = 'git/', threads = 5)
     return nil if target_list.nil?
     @target_list = target_list
     @path = path
@@ -18,13 +18,13 @@ class GitDumper
     resp = ua.get("http://#{target}/.git/index")
     index = StringIO.new(resp.content)
     nuls = index.read(8)
-    entry_count = index.read(4).unpack("N")[0]
+    entry_count = index.read(4).unpack('N')[0]
     entry_count.times do |i|
       entry = {}
       nuls = index.read(40)
-      entry[:id] = index.read(20).unpack("H40")[0]
+      entry[:id] = index.read(20).unpack('H40')[0]
       entry[:flags] = {}
-      flags = index.read(2).unpack("n")[0]
+      flags = index.read(2).unpack('n')[0]
       entry[:flags][:name_length] = flags & 0xFFF
       entrylen = 62
       entry[:name] = index.read(entry[:flags][:name_length])
@@ -38,7 +38,7 @@ class GitDumper
         FileUtils::mkdir_p(File.dirname(file_path)) unless File.exists?(File.dirname(file_path))
         file_content = Zlib::Inflate.inflate(file_resp.content)
         file = File.open(file_path, 'w')
-        file.puts(file_content.gsub(/blob [0-9]{0,}\0/, ""))
+        file.puts(file_content.gsub(/blob [0-9]{0,}\0/, ''))
       end
     end
     return true
