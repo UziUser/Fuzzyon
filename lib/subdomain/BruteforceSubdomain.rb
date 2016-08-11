@@ -2,7 +2,7 @@ require 'net/dns'
 require 'httpclient'
 
 class BruteforceSubdomain
-  def initialize(target_list, dictionary = [], threads=5, check_web_responses = false, respose_codes = [200])
+  def initialize(target_list, dictionary = [], threads = 5, check_web_responses = false, respose_codes = [200])
     return nil if target_list.nil?
     @target_list = target_list
 
@@ -93,7 +93,6 @@ class BruteforceSubdomain
           end
 
           @callbacks[:ON_TARGET_FINISH].call(target, results)
-
           found_domains[target] = results
         end
 
