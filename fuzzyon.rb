@@ -3,6 +3,7 @@
 require 'httpclient'
 require 'net/dns'
 
+#Configs
 config = {
     :dir_base => 'dictionaries/directories.txt',
     :subdomain_base => 'dictionaries/subdomains.txt',
@@ -14,8 +15,16 @@ config = {
     :threads_dir_scanner => 1,
 }
 
+http_client = HTTPClient.new
+http_client.follow_redirect_count = 1
+http_client.receive_timeout = config[:timeout_http_client]
+http_client.send_timeout = config[:timeout_http_client]
+http_client.cookie_manager = nil
+
 $VERBOSE = nil
 
+
+#Config Dictionary
 def loadDictionary(name, path)
   STDOUT.sync = false
   puts "Loading #{name} ..."
@@ -29,13 +38,7 @@ dir_base = loadDictionary('dir base', config[:dir_base])
 sub_base = loadDictionary('subdomain base', config[:subdomain_base])
 sites = loadDictionary('targets base', config[:targets])
 
-http_client = HTTPClient.new
-http_client.follow_redirect_count = 1
-http_client.receive_timeout = config[:timeout_http_client]
-http_client.send_timeout = config[:timeout_http_client]
-http_client.cookie_manager = nil
-
-
+#Functions
 def resolverGetInfo(target, resolver = Net::DNS::Resolver.new)
   result = []
 
